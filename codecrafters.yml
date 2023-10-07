@@ -2,10 +2,10 @@
 #
 # These can be VERY verbose, so we suggest turning them off
 # unless you really need them.
-debug: true
+debug: false
 
 # Use this to change the Python version used to run your code
 # on Codecrafters.
 #
 # Available versions: python-3.11
-language_pack: python-3.10
+language_pack: python-3.11

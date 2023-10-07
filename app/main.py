@@ -1,5 +1,7 @@
 # Uncomment this to pass the first stage
 import socket
+import threading
+from typing import Any
 
 
 def get_path(req: bytes) -> str:
@@ -22,6 +24,28 @@ def get_user_agent(req: bytes) -> str:
     return ""
 
 
+def handle_connections(client: socket, addr: Any):
+    "Takes in connection"
+    req = client.recv(1024).decode("utf-8")
+    path = get_path(req)
+    if path == "/":
+        response = b"HTTP/1.1 200 OK\r\n\r\n"
+    elif "/echo" in path:
+        resp_string = path.split("/", 2)[2]
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(resp_string)}\r\n\r\n{resp_string}".encode(
+            "utf-8"
+        )
+    elif "/user-agent" in path:
+        user_agent = get_user_agent(req)
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
+            "utf-8"
+        )
+    else:
+        response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+    client.sendall(response)
+    client.close()
+
+
 def main():
     """Main function"""
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -30,32 +54,13 @@ def main():
     # Uncomment this to pass the first stage
     #
 
+    # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
 
     while True:
-        client, _ = server_socket.accept()
-
-        req = client.recv(1024).decode("utf-8")
-        path = get_path(req)
-
-        if path == "/":
-            response = b"HTTP/1.1 200 OK\r\n\r\n"
-        elif "/echo" in path:
-            resp_string = path.split("/", 2)[2]
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(resp_string)}\r\n\r\n{resp_string}".encode(
-                "utf-8"
-            )
-        elif "/user-agent" in path:
-            user_agent = get_user_agent(req)
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
-                "utf-8"
-            )
-
-        else:
-            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
-        client.sendall(response)
-        client.close()
+        client, addr = server_socket.accept()
+        threading.Thread(target=handle_connections, args=(client, addr)).start()
 
 
 if __name__ == "__main__":

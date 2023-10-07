@@ -43,7 +43,7 @@ def handle_connections(client: socket, addr: Any):
             "utf-8"
         )
     elif "/files" in path:
-        filename = path.split["/"][-1]
+        filename = path.split("/")[-1]
         directory = sys.argv[-1]
         if os.path.exists(directory + filename):
             with open(directory + filename, "rb") as file:

@@ -1,5 +1,7 @@
 # Uncomment this to pass the first stage
+import os
 import socket
+import sys
 import threading
 from typing import Any
 
@@ -38,6 +40,15 @@ def handle_connections(client: socket, addr: Any):
     elif "/user-agent" in path:
         user_agent = get_user_agent(req)
         response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
+            "utf-8"
+        )
+    elif "/files" in path:
+        filename = path.split["/"][-1]
+        directory = sys.argv[-1]
+        if os.path.exists(directory + filename):
+            with open(directory + filename, "rb") as file:
+                body = file.read()
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {os.path.getsize(directory+filename)}\r\n\r\n{body}".encode(
             "utf-8"
         )
     else:

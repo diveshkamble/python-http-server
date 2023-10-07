@@ -18,10 +18,13 @@ def main():
 
         req = client.recv(1024).decode("utf-8")
         path = get_path(req)
-        print(path)
-        print(path == "/")
+
         if path == "/":
             response = b"HTTP/1.1 200 OK\r\n\r\n"
+        elif "/echo" in path:
+            resp_string = path.split("/", 2)[2]
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(resp_string)}\r\n\r\n{resp_string}".encode()
+
         else:
             response = b"HTTP/1.1 404 Not Found\r\n\r\n"
         client.sendall(response)

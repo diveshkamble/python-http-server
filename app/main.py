@@ -48,7 +48,7 @@ def handle_connections(client: socket, addr: Any):
         if os.path.exists(directory + "/" + filename):
             # with open(directory + "/" + filename, "rb") as file:
             # body = file.read()
-            file_contents = open(directory + "/" + filename, "rb")
+            file_contents = open(directory + "/" + filename, "r")
             body = file_contents.read()
             file_contents.close()
             response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {os.path.getsize(directory+'/'+filename)}\r\n\r\n{body}".encode(

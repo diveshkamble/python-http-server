@@ -29,33 +29,48 @@ def get_user_agent(req: bytes) -> str:
 def handle_connections(client: socket, addr: Any):
     "Takes in connection"
     req = client.recv(1024).decode("utf-8")
+    method = req.split("\r\n")[0].split(" ")[0]
     path = get_path(req)
     if path == "/":
-        response = b"HTTP/1.1 200 OK\r\n\r\n"
+        if method == "GET":
+            response = b"HTTP/1.1 200 OK\r\n\r\n"
     elif "/echo" in path:
-        resp_string = path.split("/", 2)[2]
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(resp_string)}\r\n\r\n{resp_string}".encode(
-            "utf-8"
-        )
-    elif "/user-agent" in path:
-        user_agent = get_user_agent(req)
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
-            "utf-8"
-        )
-    elif "/files" in path:
-        filename = path.split("/")[-1]
-        directory = sys.argv[-1]
-        if os.path.exists(directory + "/" + filename):
-            # with open(directory + "/" + filename, "rb") as file:
-            # body = file.read()
-            file_contents = open(directory + "/" + filename, "r")
-            body = file_contents.read()
-            file_contents.close()
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {os.path.getsize(directory+'/'+filename)}\r\n\r\n{body}".encode(
+        if method == "GET":
+            resp_string = path.split("/", 2)[2]
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(resp_string)}\r\n\r\n{resp_string}".encode(
                 "utf-8"
             )
-        else:
-            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+    elif "/user-agent" in path:
+        if method == "GET":
+            user_agent = get_user_agent(req)
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
+                "utf-8"
+            )
+    elif "/files" in path:
+        if method == "GET":
+            print(req.split("\r\n")[0].split(" ")[0])
+            filename = path.split("/")[-1]
+            directory = sys.argv[-1]
+            if os.path.exists(directory + "/" + filename):
+                # with open(directory + "/" + filename, "rb") as file:
+                # body = file.read()
+                file_contents = open(directory + "/" + filename, "r")
+                body = file_contents.read()
+                file_contents.close()
+                response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {os.path.getsize(directory+'/'+filename)}\r\n\r\n{body}".encode(
+                    "utf-8"
+                )
+            else:
+                response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+        elif method == "POST":
+            body = req.split("\r\n\r\n")[1]
+            print(body)
+            directory = sys.argv[-1]
+            filename = path.split("/")[-1]
+            # file_contents = open(directory + "/" + filename, "w")
+            with open(directory + "/" + filename, "w") as f:
+                f.write(body)
+            response = b"HTTP/1.1 201 Created\r\n\r\n"
     else:
         response = b"HTTP/1.1 404 Not Found\r\n\r\n"
     client.sendall(response)
